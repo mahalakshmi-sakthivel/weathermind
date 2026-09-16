@@ -1,0 +1,5 @@
+city,annual_normal_mm,ne_monsoon_share_pct,daily_wet_p50_mm,daily_p90_mm,daily_p99_mm,daily_record_mm,max_intensity_mm_per_hr,status
+Chennai,1400,60,8,45,150,494,60,approximate-replace-with-dataset
+Coimbatore,700,40,6,30,95,230,45,approximate-replace-with-dataset
+Erode,750,45,5,26,80,190,40,approximate-replace-with-dataset
+Tirupur,720,45,5,28,85,200,42,approximate-replace-with-dataset

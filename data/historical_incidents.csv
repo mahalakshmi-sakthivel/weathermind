@@ -1,0 +1,25 @@
+area,city,event_date,rainfall_mm,duration_hr,observed_impact,response_note,source_status
+Velachery,Chennai,2015-12-01,290.0,24,"Prolonged inundation across residential blocks during the December 2015 Chennai floods; ground floors submerged for several days.","Boat-based evacuation and relief camps; road access cut for extended periods.",illustrative-verify
+Velachery,Chennai,2023-12-04,180.0,24,"Widespread waterlogging during Cyclone Michaung; subways and arterial roads impassable.","Traffic diverted, pumps deployed at known choke points.",illustrative-verify
+Mudichur,Chennai,2015-12-02,250.0,24,"Severe flooding intensified by upstream reservoir discharge into the Adyar system.","Mass evacuation of low-lying residential layouts.",illustrative-verify
+Mudichur,Chennai,2023-12-05,150.0,24,"Standing water in residential layouts for over 48 hours after heavy cyclonic rain.","Relief supplies moved by boat; pumping sustained for days.",illustrative-verify
+Pallikaranai,Chennai,2015-12-01,270.0,24,"Marshland fringe settlements inundated; drainage had no outlet as the natural sink was already saturated.","Evacuation to relief centres; sanitation risk flagged.",illustrative-verify
+Pallikaranai,Chennai,2021-11-07,120.0,18,"Northeast monsoon spell caused knee-deep water on approach roads.","Municipal pumping and temporary road closures.",illustrative-verify
+Peelamedu,Coimbatore,2024-12-15,108.2,24,"Locality recorded the highest rainfall in the city during a heavy-rain spell (city average around 81.5 mm); rapid street ponding.","Local drainage teams mobilised; traffic slowed on arterial roads.",illustrative-verify
+Peelamedu,Coimbatore,2024-11-01,200.0,48,"Part of a two-day event totalling roughly 426.6 mm across Coimbatore district, causing deaths and major inundation.","Multi-agency rescue; relief camps opened across the district.",illustrative-verify
+Ukkadam,Coimbatore,2024-11-01,210.0,48,"Low-lying core area waterlogged as the adjacent tank reached capacity during the two-day event.","Pumping and evacuation of tank-adjacent dwellings.",illustrative-verify
+Ukkadam,Coimbatore,2022-10-20,95.0,12,"Short high-intensity burst caused rapid waterlogging at the bus stand and surrounding market streets.","Traffic diversion; emergency drain clearance.",illustrative-verify
+Singanallur,Coimbatore,2024-11-01,190.0,48,"Lake surplus plus local runoff flooded approach roads and low-lying housing.","Barricading of flooded stretches; pumping of underpasses.",illustrative-verify
+Singanallur,Coimbatore,2021-11-11,85.0,18,"Moderate-to-heavy spell produced ponding at junctions and along the lake bund road.","Municipal crews cleared blocked inlets.",illustrative-verify
+ABD Road,Erode,2022-11-01,90.0,12,"Commercial corridor waterlogged during a heavy spell; shops affected at low points.","Emergency drain clearance and traffic management.",illustrative-verify
+ABD Road,Erode,2023-10-18,70.0,10,"Sheet flow accumulated at junctions after a short intense burst.","Temporary closures; municipal pumping.",illustrative-verify
+Bhavani Riverside,Erode,2022-08-10,60.0,24,"Riverside inundation driven mainly by high Cauvery-Bhavani flows and upstream release rather than local rainfall.","Riverside settlements moved to higher ground; flood warning issued.",illustrative-verify
+Bhavani Riverside,Erode,2021-11-20,110.0,24,"Combined local rain and elevated river stage flooded riverside stretches.","Evacuation advisory for bank-side dwellings.",illustrative-verify
+Kasipalayam,Erode,2022-11-02,75.0,12,"Localised ponding in residential-industrial pockets after a heavy spell.","Drain clearance; no evacuation required.",illustrative-verify
+Kasipalayam,Erode,2023-11-15,55.0,10,"Moderate rain caused short-lived waterlogging at low points.","Routine municipal response.",illustrative-verify
+Avinashi Road,Tirupur,2023-10-25,80.0,8,"High-intensity burst over a heavily paved corridor produced fast runoff and junction flooding.","Traffic diversion on the arterial stretch.",illustrative-verify
+Avinashi Road,Tirupur,2021-11-12,100.0,14,"Northeast monsoon spell flooded service roads and underpass approaches.","Pumping and barricading.",illustrative-verify
+Noyyal Riverside,Tirupur,2024-11-02,160.0,48,"Low-lying dwellings along the Noyyal inundated as the river ran high during the district-wide event.","Evacuation of riverside households; relief camp opened.",illustrative-verify
+Noyyal Riverside,Tirupur,2022-10-30,95.0,18,"River stage rise combined with local runoff flooded bank-side homes.","Advisory issued; temporary shelter arranged.",illustrative-verify
+Veerapandi,Tirupur,2021-11-11,70.0,12,"Limited ponding in peri-urban pockets; most runoff absorbed by open ground.","Monitoring only.",illustrative-verify
+Veerapandi,Tirupur,2024-11-01,140.0,48,"Extended heavy spell produced localised flooding despite better natural drainage.","Local response teams on standby.",illustrative-verify
