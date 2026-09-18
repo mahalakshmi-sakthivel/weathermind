@@ -177,28 +177,85 @@ def _call_anthropic(payload: dict, model: str) -> str:
     return "".join(block.text for block in message.content if block.type == "text")
 
 
-def _call_openai(payload: dict, model: str = "gpt-4o-mini") -> str:
-    from openai import OpenAI
+# --------------------------------------------------------------------------
+# Deterministic fallback & Decision Brief generator
+# --------------------------------------------------------------------------
+def generate_fallback_brief(
+    risk_class,
+    confidence,
+    threshold_range,
+    historical_incidents,
+    payload: dict | None = None,
+) -> str:
+    """Simple templated brief used if the LLM API fails or is unconfigured."""
+    if payload:
+        return template_brief(payload)
 
-    client = OpenAI(api_key=_get_secret("OPENAI_API_KEY"))
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=1200,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": "Write the decision brief from this payload:\n\n"
-                + json.dumps(payload, indent=2, default=str),
-            },
-        ],
+    incident_note = ""
+    if historical_incidents:
+        first_inc = historical_incidents[0]
+        if isinstance(first_inc, dict):
+            date = first_inc.get("date") or first_inc.get("event_date") or "past date"
+            impact = first_inc.get("impact") or first_inc.get("observed_impact") or "incident reported"
+            incident_note = f" Similar conditions caused incidents here before ({date}: {impact})."
+        else:
+            incident_note = f" Similar conditions caused incidents here before: {first_inc}."
+
+    conf_pct = f"{confidence:.0%}" if isinstance(confidence, (float, int)) else str(confidence)
+    return (
+        f"Risk Level: {risk_class} ({conf_pct} confidence). "
+        f"Risk class would shift at a rainfall threshold of {threshold_range}."
+        f"{incident_note} Recommend monitoring conditions closely."
     )
-    return response.choices[0].message.content or ""
 
 
-# --------------------------------------------------------------------------
-# Deterministic fallback
-# --------------------------------------------------------------------------
+def generate_decision_brief(
+    risk_class,
+    confidence,
+    shap_summary,
+    threshold_range,
+    historical_incidents,
+    payload: dict | None = None,
+    model: str = "claude-3-5-sonnet-20241022",
+) -> tuple[str, bool]:
+    """
+    Generate a decision brief using Claude (Anthropic) as the primary provider.
+    Wrapped in try/except so if it fails or times out, the app falls back to a
+    templated brief instead of crashing.
+    Returns (brief_text, used_fallback: bool).
+    """
+    conf_pct = f"{confidence:.0%}" if isinstance(confidence, (float, int)) else str(confidence)
+    prompt = f"""Generate a concise, actionable decision brief for an emergency responder.
+
+Risk Level: {risk_class}
+Confidence: {conf_pct}
+Key contributing factors: {shap_summary}
+Rainfall threshold for risk transition: {threshold_range}
+Historical incidents at this location: {historical_incidents}
+
+Write 3-4 sentences: what the risk means, why (factors), and one recommended action."""
+
+    api_key = _get_secret("ANTHROPIC_API_KEY")
+
+    if api_key:
+        try:
+            from anthropic import Anthropic  # Primary provider: Claude
+            client = Anthropic(api_key=api_key)
+            response = client.messages.create(
+                model=model,
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.content[0].text, False
+        except Exception as e:
+            print(f"LLM call failed: {e}. Falling back to template.")
+
+    fallback_text = generate_fallback_brief(
+        risk_class, confidence, threshold_range, historical_incidents, payload
+    )
+    return fallback_text, True
+
+
 def template_brief(payload: dict) -> str:
     m = payload["model_output"]
     band = payload["threshold_band"]
@@ -318,24 +375,18 @@ def generate_brief(payload: dict, provider: str = "auto",
                    model: str | None = None) -> tuple[str, str]:
     """Return (brief_markdown, source_label)."""
     model = model or config.DEFAULT_LLM_MODEL
+    m = payload["model_output"]
+    band = payload["threshold_band"]
 
-    if provider in ("auto", "anthropic") and _get_secret("ANTHROPIC_API_KEY"):
-        try:
-            return _call_anthropic(payload, model), f"Claude ({model})"
-        except Exception as exc:
-            if provider == "anthropic":
-                return (
-                    f"{template_brief(payload)}\n\n> LLM call failed: `{exc}`",
-                    "Template fallback (API error)",
-                )
-
-    if provider in ("auto", "openai") and _get_secret("OPENAI_API_KEY"):
-        try:
-            return _call_openai(payload), "OpenAI"
-        except Exception as exc:
-            return (
-                f"{template_brief(payload)}\n\n> LLM call failed: `{exc}`",
-                "Template fallback (API error)",
-            )
-
-    return template_brief(payload), "Deterministic template (no API key)"
+    text, used_fallback = generate_decision_brief(
+        risk_class=m["risk_class"],
+        confidence=m["tree_vote_agreement"],
+        shap_summary=", ".join(f"{f['factor']} ({f['effect']})" for f in payload.get("top_factors", [])[:3]),
+        threshold_range=band.get("note", ""),
+        historical_incidents=payload.get("historical_incidents", []),
+        payload=payload,
+        model=model,
+    )
+    if not used_fallback:
+        return text, f"Claude ({model})"
+    return text, "Deterministic template (no API key)"

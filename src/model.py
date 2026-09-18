@@ -134,6 +134,21 @@ def load_model() -> ModelBundle:
 # --------------------------------------------------------------------------
 # Prediction
 # --------------------------------------------------------------------------
+def get_tree_vote_confidence(rf_model, X_instance) -> float:
+    """
+    Returns the fraction of individual trees in the Random Forest
+    that voted for the ensemble's final predicted class.
+    This is what's displayed as the 'confidence score' in the UI.
+    """
+    model = rf_model.model if hasattr(rf_model, "model") else rf_model
+    tree_predictions = np.array([
+        tree.predict(X_instance)[0] for tree in model.estimators_
+    ])
+    final_prediction = model.predict(X_instance)[0]
+    agreement = float(np.mean(tree_predictions == final_prediction))
+    return agreement  # e.g., 0.87 → displayed as "87% confidence"
+
+
 def _tree_vote_matrix(rf: RandomForestClassifier, X: pd.DataFrame) -> np.ndarray:
     """(n_trees, n_samples) matrix of per-tree class votes."""
     idx = np.array([est.predict(X.values) for est in rf.estimators_], dtype=int)

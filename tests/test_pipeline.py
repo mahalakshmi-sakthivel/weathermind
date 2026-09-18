@@ -25,11 +25,11 @@ from src.data_loader import (
     areas_for, build_record, cities, default_weather, get_area_profile, get_incidents,
 )
 from src.features import engineer_features
-from src.llm_brief import build_payload, generate_brief
-from src.model import load_model, predict
+from src.llm_brief import build_payload, generate_brief, generate_decision_brief, generate_fallback_brief
+from src.model import load_model, predict, get_tree_vote_confidence
 from src.plausibility import check
 from src.risk_surface import compute_surface, plausibility_mask
-from src.shap_utils import explain, group_contributions
+from src.shap_utils import explain, group_contributions, get_shap_explanation
 
 BUNDLE = load_model()
 
@@ -141,6 +141,25 @@ def test_brief_generates_without_api_key(monkeypatch=None):
     assert "Recommended actions" in text
     assert len(text) > 200
     assert source
+
+
+def test_tree_vote_confidence():
+    record, _ = _record()
+    X = engineer_features(record)[BUNDLE.features]
+    conf = get_tree_vote_confidence(BUNDLE, X)
+    assert 0.0 <= conf <= 1.0
+
+
+def test_decision_brief_fallback():
+    text, used_fallback = generate_decision_brief(
+        risk_class="HIGH",
+        confidence=0.85,
+        shap_summary="Rainfall (120mm) raises risk",
+        threshold_range="80-100mm",
+        historical_incidents=["2023-11-15: 140mm flood"],
+    )
+    assert used_fallback is True
+    assert "Risk Level: HIGH" in text
 
 
 if __name__ == "__main__":

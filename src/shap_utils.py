@@ -69,6 +69,65 @@ def _expected_level(bundle, X: pd.DataFrame) -> np.ndarray:
     return proba @ weights
 
 
+def get_shap_explanation(explainer, model, X_instance: pd.DataFrame) -> dict:
+    """
+    Returns SHAP values for the PREDICTED class only, with a
+    reconstruction check to confirm alignment with predict_proba.
+    """
+    # Get model's actual prediction for this instance
+    predicted_class = model.predict(X_instance)[0]
+    classes = list(model.classes_)
+    if predicted_class in classes:
+        predicted_class_idx = classes.index(predicted_class)
+    else:
+        predicted_class_idx = int(predicted_class)
+
+    proba = model.predict_proba(X_instance)[0]
+
+    # shap_values shape for multiclass RF: (n_classes, n_samples, n_features) or list
+    shap_values_all = explainer.shap_values(X_instance, check_additivity=False)
+
+    if isinstance(shap_values_all, list):
+        shap_values_predicted = np.asarray(shap_values_all[predicted_class_idx])[0]
+        base_value = explainer.expected_value
+        if isinstance(base_value, (list, np.ndarray)):
+            base_value = float(base_value[predicted_class_idx])
+        else:
+            base_value = float(base_value)
+    else:
+        values_arr = np.asarray(shap_values_all)
+        if values_arr.ndim == 3:
+            if values_arr.shape[0] == len(classes):  # (n_classes, n_samples, n_features)
+                shap_values_predicted = values_arr[predicted_class_idx][0]
+            else:  # (n_samples, n_features, n_classes)
+                shap_values_predicted = values_arr[0, :, predicted_class_idx]
+        else:
+            shap_values_predicted = values_arr[0]
+
+        base_value = explainer.expected_value
+        if isinstance(base_value, (list, np.ndarray)):
+            base_value = float(base_value[predicted_class_idx])
+        else:
+            base_value = float(base_value)
+
+    # Sanity check: shap sum + base_value should ≈ predicted class probability
+    reconstructed = base_value + float(np.sum(shap_values_predicted))
+    actual_proba = float(proba[predicted_class_idx])
+
+    if abs(reconstructed - actual_proba) > 0.05:
+        print(f"WARNING: SHAP reconstruction mismatch. "
+              f"Reconstructed={reconstructed:.3f}, Actual={actual_proba:.3f}")
+
+    return {
+        "predicted_class": predicted_class,
+        "predicted_class_idx": predicted_class_idx,
+        "confidence": actual_proba,
+        "shap_values": shap_values_predicted,
+        "base_value": base_value,
+        "feature_names": X_instance.columns.tolist(),
+    }
+
+
 def _shap_contributions(bundle, X: pd.DataFrame) -> np.ndarray:
     """Per-feature SHAP values, combined into expected-risk-level units."""
     explainer = shap.TreeExplainer(bundle.model)

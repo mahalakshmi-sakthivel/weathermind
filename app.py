@@ -27,7 +27,7 @@ from src.data_loader import (
     get_incidents,
 )
 from src.feedback import feedback_summary, log_feedback
-from src.llm_brief import build_payload, generate_brief
+from src.llm_brief import build_payload, generate_brief, generate_decision_brief
 from src.model import load_model, predict
 from src.plausibility import check as plausibility_check
 from src.plausibility import rejected_example
@@ -170,6 +170,7 @@ st.caption(str(profile["notes"]))
 left, right = st.columns([3, 2])
 
 with left:
+    # NOTE: this is raw tree-vote agreement, not a calibrated probability
     st.markdown(
         f"""
         <div class="risk-banner" style="background:{color}">
@@ -421,14 +422,30 @@ with tabs[4]:
             counterfactuals=cached_counterfactuals(rkey, city, target_class),
             plausibility=plaus, incidents=incidents,
         )
+        shap_summary = narrate(factors)
+        threshold_range = band.describe()
+        historical_incidents_list = incidents.to_dict(orient="records")
+
         with st.spinner("Writing brief…"):
-            text, source = generate_brief(payload)
-        st.session_state["brief"] = {"text": text, "source": source, "payload": payload}
+            text, used_fallback = generate_decision_brief(
+                risk_class=prediction["risk_label"],
+                confidence=prediction["confidence"],
+                shap_summary=shap_summary,
+                threshold_range=threshold_range,
+                historical_incidents=historical_incidents_list,
+                payload=payload,
+            )
+        st.session_state["brief"] = {
+            "text": text,
+            "used_fallback": used_fallback,
+            "payload": payload,
+        }
 
     if "brief" in st.session_state:
         brief = st.session_state["brief"]
+        if brief.get("used_fallback"):
+            st.info("ℹ️ *Note: Fallback template was used because the LLM API was unavailable.*")
         st.markdown(brief["text"])
-        st.caption(f"Source: {brief['source']}")
         with st.expander("Exact payload sent to the model"):
             st.json(brief["payload"])
         st.download_button(
