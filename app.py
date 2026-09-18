@@ -362,10 +362,16 @@ with tabs[3]:
         )
     with c3:
         st.markdown("&nbsp;", unsafe_allow_html=True)
-        if st.button("Reset to baseline", use_container_width=True):
-            for feat, value in baseline.items():
+        def _set_preset_values(overrides: dict) -> None:
+            for feat, value in overrides.items():
                 st.session_state[f"w_{feat}"] = float(value)
-            st.rerun()
+
+        st.button(
+            "Reset to baseline",
+            use_container_width=True,
+            on_click=_set_preset_values,
+            args=(baseline,),
+        )
 
     comparison = pd.DataFrame(
         {
@@ -386,10 +392,12 @@ with tabs[3]:
         "Cloudburst": {"rainfall_mm": 90.0, "duration_hr": 3.0},
     }
     for col, (name, overrides) in zip((q1, q2, q3, q4), presets.items()):
-        if col.button(name, use_container_width=True):
-            for feat, value in overrides.items():
-                st.session_state[f"w_{feat}"] = float(value)
-            st.rerun()
+        col.button(
+            name,
+            use_container_width=True,
+            on_click=_set_preset_values,
+            args=(overrides,),
+        )
 
     st.caption(
         f"Plausibility of the current scenario: {plaus.badge} — "
